@@ -219,6 +219,18 @@ function App() {
     document.documentElement.classList.toggle("no-grain", !t.grain);
   }, [t.grain]);
 
+  // 모바일: 브라우저 바깥(상·하) 배경색을 현재 화면과 맞춤
+  React.useEffect(() => {
+    const lightPages = page === 0 || page === 1 || page === 2 || page === 5;
+    const bg = lightPages ? "#ffffff" : "oklch(0.56 0.24 268)";
+    const theme = lightPages ? "#ffffff" : "#5a4ae6";
+    document.documentElement.style.setProperty("--page-bg", bg);
+    document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute("content", theme);
+  }, [page]);
+
   React.useEffect(() => {
     let cancelled = false;
     async function flushOnMount() {
