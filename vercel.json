@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "rewrites": [
+    { "source": "/", "destination": "/Music Survey.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/admin/sync-sheets",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

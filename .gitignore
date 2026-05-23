@@ -1,0 +1,10 @@
+server/node_modules/
+node_modules/
+server/.env
+.env
+.env.local
+server/google-service-account.json
+survey-config.js
+*.log
+.DS_Store
+.vercel
