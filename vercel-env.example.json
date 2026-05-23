@@ -8,7 +8,6 @@
     "SURVEY_STABLE_ENDPOINT": "/api/survey-responses",
     "GOOGLE_SHEETS_SPREADSHEET_ID": "your_spreadsheet_id",
     "GOOGLE_SHEETS_TAB_NAME": "응답",
-    "GOOGLE_SERVICE_ACCOUNT_JSON_BASE64": "base64_single_line",
-    "CRON_SECRET": "your-cron-secret"
+    "GOOGLE_SERVICE_ACCOUNT_JSON_BASE64": "base64_single_line"
   }
 }
