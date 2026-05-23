@@ -6,7 +6,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "node scripts/inject-survey-config.js",
+    "build": "node scripts/inject-survey-config.js && node scripts/prepare-public.js",
     "config:local": "node scripts/prepare-local-config.js",
     "dev:server": "cd server && npm run dev",
     "dev": "npx vercel dev",

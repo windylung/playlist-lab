@@ -17,6 +17,7 @@ vercel-env.env
 
 # Vercel / build
 .vercel/
+public/
 
 # OS & editor
 .DS_Store
