@@ -131,7 +131,7 @@ function EntryScreen({ session, tweaks = {}, onEnter }) {
           <input
             placeholder="이름 또는 학번 검색"
             value={query}
-            autoFocus
+            autoFocus={typeof window !== "undefined" && !window.matchMedia("(pointer: coarse)").matches}
             onChange={(e) => setQuery(e.target.value)} />
           {query &&
             <button type="button" className="icon-btn entry-icon-btn" onClick={() => { setQuery(""); setSelected(null); }}>
@@ -445,41 +445,65 @@ const FAKE_ITUNES = [
 { title: "사랑의 시", artist: "10cm", hue: 320 }];
 
 
-// iTunes Search API via JSONP (works around no-CORS) with fetch attempt first.
-function itunesSearch(term, timeoutMs = 3500) {
+function upgradeArtworkUrl(url) {
+  if (!url) return undefined;
+  return url.replace(/(\d+)x(\d+)bb\.jpg$/, "300x300bb.jpg");
+}
+
+function normalizeItunesRows(results) {
+  return (results || []).map((r) => ({
+    title: r.trackName || r.title,
+    artist: r.artistName || r.artist,
+    artwork: upgradeArtworkUrl(r.artworkUrl100 || r.artwork),
+    hue: Math.abs(r.trackId || hashCode(r.trackName || r.title || "") || 0) % 360
+  })).filter((s) => s.title && s.artist);
+}
+
+// JSONP — localhost static dev only (third-party script often blocked on *.vercel.app).
+function itunesSearchJsonp(term, timeoutMs = 3500) {
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&country=kr&limit=10`;
-  // Try fetch first (sometimes works, returns proper CORS in modern browsers)
-  const fetchAttempt = fetch(url).
-  then((r) => r.ok ? r.json() : Promise.reject(new Error("bad status"))).
-  then((d) => d.results || []);
-  // JSONP fallback
-  const jsonpAttempt = new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const cb = "__it_" + Math.random().toString(36).slice(2, 9);
     let done = false;
     const cleanup = () => {
       done = true;
-      try {delete window[cb];} catch {}
+      try { delete window[cb]; } catch {}
       if (s.parentNode) s.parentNode.removeChild(s);
     };
-    const to = setTimeout(() => {if (!done) {cleanup();reject(new Error("jsonp timeout"));}}, timeoutMs);
-    window[cb] = (data) => {clearTimeout(to);cleanup();resolve(data.results || []);};
+    const to = setTimeout(() => { if (!done) { cleanup(); reject(new Error("jsonp timeout")); } }, timeoutMs);
+    window[cb] = (data) => { clearTimeout(to); cleanup(); resolve(data.results || []); };
     const s = document.createElement("script");
     s.src = url + "&callback=" + cb;
-    s.onerror = () => {clearTimeout(to);cleanup();reject(new Error("jsonp error"));};
+    s.onerror = () => { clearTimeout(to); cleanup(); reject(new Error("jsonp error")); };
     document.head.appendChild(s);
   });
-  // Use whichever resolves first; if fetch wins, return its data, else JSONP.
-  return Promise.race([
-  fetchAttempt.catch(() => new Promise(() => {})), // hide fetch errors so JSONP can win
-  jsonpAttempt]
-  ).then((results) =>
-  results.map((r) => ({
-    title: r.trackName || r.title,
-    artist: r.artistName || r.artist,
-    artwork: r.artworkUrl100,
-    hue: Math.abs(r.trackId || hashCode(r.trackName || "") || 0) % 360
-  }))
-  );
+}
+
+async function itunesSearch(term, timeoutMs = 3500) {
+  const q = term.trim();
+  if (!q) return [];
+
+  // 1) Same-origin API — reliable on Vercel (deploy blocks cross-site iTunes JSONP/fetch).
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(`/api/itunes-search?term=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.results) && data.results.length > 0) {
+        return data.results[0].title ? data.results : normalizeItunesRows(data.results);
+      }
+    }
+  } catch (_) {}
+
+  // 2) JSONP fallback for python http.server local dev (no /api routes).
+  try {
+    const raw = await itunesSearchJsonp(q, timeoutMs);
+    return normalizeItunesRows(raw);
+  } catch (_) {
+    return [];
+  }
 }
 function hashCode(s) {
   let h = 0;
@@ -679,10 +703,7 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
         source === "empty" ?
         <div className="text-center" style={{ padding: "30px 20px", fontSize: 14 }}>
             <div style={{ color: "oklch(1 0 0 / 0.85)", marginBottom: 4 }}>"{query}"에 대한 결과가 없어요</div>
-            <div style={{ fontSize: 12, marginBottom: 16, color: "oklch(1 0 0 / 0.55)" }}>다른 키워드로 검색하거나 직접 입력해 주세요</div>
-            <button type="button" onClick={() => setManualOpen(true)} className="favorites-manual-link">
-              직접 입력하기
-            </button>
+            <div style={{ fontSize: 12, color: "oklch(1 0 0 / 0.55)" }}>다른 키워드로 검색해 주세요</div>
           </div> :
 
         <div>
@@ -696,13 +717,6 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
                 <Ic.Plus s={18} />
               </div>
           )}
-            {source === "local" &&
-          <div className="text-center" style={{ padding: "12px 20px 4px" }}>
-                <button type="button" onClick={() => setManualOpen(true)} className="favorites-manual-link">
-                  원하는 곡이 없나요? 직접 입력
-                </button>
-              </div>
-          }
           </div>
         }
       </div>

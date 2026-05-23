@@ -317,6 +317,7 @@ function AlbumArt({ song, size = 280 }) {
         <img
           src={artwork}
           alt={song?.title || ""}
+          referrerPolicy="no-referrer"
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
       ) : (
@@ -374,7 +375,7 @@ function MiniArt({ song, size = 44, artwork }) {
         flexShrink: 0,
         boxShadow: "inset 0 0 0 1px oklch(0.16 0.03 270 / 0.08)",
       }}>
-        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}/>
+        <img src={url} alt="" referrerPolicy="no-referrer" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}/>
       </div>
     );
   }
