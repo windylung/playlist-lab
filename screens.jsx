@@ -256,6 +256,9 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
   const [pressed, setPressed] = React.useState(null);
   const [exiting, setExiting] = React.useState(null);
   const [entering, setEntering] = React.useState(false);
+  const [viewportHeight, setViewportHeight] = React.useState(() =>
+    typeof window !== "undefined" ? window.innerHeight : 800
+  );
   const stageColor = song?.edgeColor || null;
   const stageHue = song?.hue ?? 268;
   const stageBg = React.useMemo(() => {
@@ -272,6 +275,24 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
     const t = setTimeout(() => setEntering(false), 450);
     return () => clearTimeout(t);
   }, [idx]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncChrome = window.__setMobileChromeColor;
+    if (typeof syncChrome !== "function") return;
+    // 반응 화면은 곡마다 배경이 바뀌므로 브라우저 UI 색도 같은 톤으로 맞춘다.
+    syncChrome(stageBg, stageBg);
+  }, [stageBg]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    function handleResize() {
+      setViewportHeight(window.innerHeight);
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   function react(action) {
     if (exiting || pressed) return;
@@ -290,6 +311,15 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
   }
 
   if (!song) return null;
+
+  const isCompactHeight = viewportHeight < 760;
+  const topPadding = isCompactHeight ? 20 : 44;
+  const contentBottomPadding = isCompactHeight ? 8 : 12;
+  const titleMarginTop = isCompactHeight ? 16 : 26;
+  const ctaMarginTop = isCompactHeight ? 14 : 22;
+  const reactionsBottomPadding = isCompactHeight ? 14 : 26;
+  const albumArtMaxByHeight = Math.floor(viewportHeight * (isCompactHeight ? 0.31 : 0.35));
+  const albumArtSize = Math.max(170, Math.min(tweaks.albumArtSize || 240, albumArtMaxByHeight));
 
   const exitAnim = exiting === "like" ? "swipe-right .42s cubic-bezier(.45,.05,.3,1) forwards" :
   exiting === "dislike" ? "swipe-left .42s cubic-bezier(.45,.05,.3,1) forwards" :
@@ -324,7 +354,7 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
       </div>
 
       {/* Album art + meta */}
-      <div className="flex col center" style={{ flex: 1, padding: "44px 24px 12px", position: "relative", zIndex: 2 }}>
+      <div className="flex col center" style={{ flex: 1, padding: `${topPadding}px 24px ${contentBottomPadding}px`, position: "relative", zIndex: 2 }}>
         <div
           key={song.id}
           style={{
@@ -334,15 +364,14 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
             transformOrigin: "center",
             willChange: "transform"
           }}>
-          
-          <AlbumArt song={song} size={240} />
+          <AlbumArt song={song} size={albumArtSize} />
         </div>
 
-        <div style={{ textAlign: "center", maxWidth: 320, marginTop: 26 }}>
-          <h2 className="display" style={{ fontSize: 30, margin: 0, color: "oklch(1 0 0 / 0.98)" }}>
+        <div style={{ textAlign: "center", maxWidth: 320, marginTop: titleMarginTop }}>
+          <h2 className="display" style={{ fontSize: isCompactHeight ? 26 : 30, margin: 0, color: "oklch(1 0 0 / 0.98)" }}>
             {song.title}
           </h2>
-          <div style={{ fontSize: 16, color: "oklch(1 0 0 / 0.72)", marginTop: 6, fontWeight: 400, letterSpacing: "-0.015em" }}>
+          <div style={{ fontSize: isCompactHeight ? 15 : 16, color: "oklch(1 0 0 / 0.72)", marginTop: 6, fontWeight: 400, letterSpacing: "-0.015em" }}>
             {song.artist}
           </div>
         </div>
@@ -351,7 +380,7 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
           href={song.youtube} target="_blank" rel="noreferrer"
           className="glass glass-btn"
           style={{
-            marginTop: 22,
+            marginTop: ctaMarginTop,
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "9px 16px",
             fontSize: 12, fontWeight: 600,
@@ -364,7 +393,7 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
       </div>
 
       {/* Reaction buttons */}
-      <div style={{ position: "relative", zIndex: 3, padding: "0 12px 26px" }}>
+      <div style={{ position: "relative", zIndex: 3, padding: `0 12px ${reactionsBottomPadding}px` }}>
         <div className="flex gap-2" style={{ alignItems: "stretch" }}>
           <ReactionBtn kind="dislike" onClick={() => react("dislike")} pressed={pressed === "dislike"} />
           <ReactionBtn kind="skip" onClick={() => react("skip")} pressed={pressed === "skip"} />

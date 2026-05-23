@@ -219,16 +219,12 @@ function App() {
     document.documentElement.classList.toggle("no-grain", !t.grain);
   }, [t.grain]);
 
-  // 모바일: 브라우저 바깥(상·하) 배경색을 현재 화면과 맞춤
+  // 모바일: 브라우저 UI(상·하 바)와 앱 배경을 동기화
   React.useEffect(() => {
     const lightPages = page === 0 || page === 1 || page === 2 || page === 5;
     const bg = lightPages ? "#ffffff" : "oklch(0.56 0.24 268)";
     const theme = lightPages ? "#ffffff" : "#5a4ae6";
-    document.documentElement.style.setProperty("--page-bg", bg);
-    document.documentElement.style.backgroundColor = bg;
-    document.body.style.backgroundColor = bg;
-    const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.setAttribute("content", theme);
+    window.__setMobileChromeColor?.(bg, theme);
   }, [page]);
 
   React.useEffect(() => {
@@ -434,3 +430,14 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App/>);
+
+// 모든 화면에서 재사용하는 브라우저 UI 색상 동기화 함수
+window.__setMobileChromeColor = function setMobileChromeColor(backgroundColor, themeColor) {
+  const bg = backgroundColor || "#ffffff";
+  const theme = themeColor || bg;
+  document.documentElement.style.setProperty("--page-bg", bg);
+  document.documentElement.style.backgroundColor = bg;
+  document.body.style.backgroundColor = bg;
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.setAttribute("content", theme);
+};
