@@ -43,6 +43,11 @@ function getSheetsClient() {
   return sheetsClient;
 }
 
+function getSheetConfig() {
+  getSheetsClient();
+  return sheetConfig;
+}
+
 function flattenRow(record) {
   const reactions = Array.isArray(record.reactions) ? record.reactions : [];
   const favorites = Array.isArray(record.favorites) ? record.favorites : [];
@@ -91,34 +96,84 @@ const HEADER = [
 ];
 
 async function ensureHeader(sheets) {
-  const range = `${sheetConfig.tabName}!A1:N1`;
+  const { tabName, spreadsheetId } = getSheetConfig();
+  const range = `${tabName}!A1:N1`;
   const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: sheetConfig.spreadsheetId,
+    spreadsheetId,
     range,
   });
   const first = res.data.values?.[0];
   if (first && first.length >= 5) return;
 
   await sheets.spreadsheets.values.update({
-    spreadsheetId: sheetConfig.spreadsheetId,
+    spreadsheetId,
     range,
     valueInputOption: "RAW",
     requestBody: { values: [HEADER] },
   });
 }
 
-export async function appendSurveyToSheet(record) {
+async function findSheetRowByStudentId(sheets, studentId) {
+  const { tabName, spreadsheetId } = getSheetConfig();
+  const range = `${tabName}!C2:C`;
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range,
+  });
+  const rows = res.data.values || [];
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][0] || "") === String(studentId)) {
+      return i + 2; // header is row 1
+    }
+  }
+  return null;
+}
+
+/** 학생 ID 기준 upsert (재제출 시 시트 행 갱신) */
+export async function upsertSurveyToSheet(record) {
   const sheets = getSheetsClient();
+  const { tabName, spreadsheetId } = getSheetConfig();
   await ensureHeader(sheets);
 
-  const range = `${sheetConfig.tabName}!A:N`;
+  const values = [flattenRow(record)];
+  const existingRow = await findSheetRowByStudentId(sheets, record.student_id);
+
+  if (existingRow) {
+    const range = `${tabName}!A${existingRow}:N${existingRow}`;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: "RAW",
+      requestBody: { values },
+    });
+    return { action: "updated", row: existingRow };
+  }
+
+  const range = `${tabName}!A:N`;
   await sheets.spreadsheets.values.append({
-    spreadsheetId: sheetConfig.spreadsheetId,
+    spreadsheetId,
     range,
     valueInputOption: "RAW",
     insertDataOption: "INSERT_ROWS",
-    requestBody: { values: [flattenRow(record)] },
+    requestBody: { values },
   });
+  return { action: "appended" };
+}
+
+export async function syncRecordToSheet(record) {
+  if (!isSheetsEnabled()) return { skipped: true, reason: "sheets_not_configured" };
+
+  await markSheetSync(record.response_id, "syncing");
+  try {
+    const sheetResult = await upsertSurveyToSheet(record);
+    await markSheetSync(record.response_id, "synced");
+    return { ok: true, ...sheetResult };
+  } catch (err) {
+    await markSheetSync(record.response_id, "failed", {
+      error: String(err?.message || err).slice(0, 500),
+    });
+    throw err;
+  }
 }
 
 export async function syncPendingToSheets() {
@@ -131,15 +186,10 @@ export async function syncPendingToSheets() {
 
   for (const record of pending) {
     try {
-      await markSheetSync(record.response_id, "syncing");
-      await appendSurveyToSheet(record);
-      await markSheetSync(record.response_id, "synced");
+      await syncRecordToSheet(record);
       synced += 1;
-    } catch (err) {
+    } catch {
       failed += 1;
-      await markSheetSync(record.response_id, "failed", {
-        error: String(err?.message || err).slice(0, 500),
-      });
     }
   }
 

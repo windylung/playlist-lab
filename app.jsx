@@ -109,9 +109,10 @@ async function submitMinimal(payload) {
 
 async function submitStable(payload) {
   if (!STABLE_ENDPOINT) throw new Error("stable endpoint missing");
+  const studentId = payload.student?.student_id || "";
   return postJson(STABLE_ENDPOINT, payload, {
     ...(STABLE_API_KEY ? { "x-survey-api-key": STABLE_API_KEY } : {}),
-    "x-idempotency-key": payload.response_id,
+    "x-idempotency-key": studentId || payload.response_id,
   });
 }
 
@@ -171,6 +172,8 @@ async function flushSubmissionQueue() {
   return { flushed, remaining: nextQueue.length };
 }
 
+const PAGE_TRANSITION_MS = 300;
+
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   // page 0 = LandingScreen (모션 포스터), 1~5 = 기존 흐름
@@ -182,7 +185,8 @@ function App() {
   const [saveMessage, setSaveMessage] = React.useState("");
   const [pendingSubmission, setPendingSubmission] = React.useState(null);
   const [submissionMeta, setSubmissionMeta] = React.useState(null);
-  const [transitioning, setTransitioning] = React.useState(false);
+  const [outgoingPage, setOutgoingPage] = React.useState(null);
+  const transitionLock = React.useRef(false);
 
   // restore from localStorage on mount
   React.useEffect(() => {
@@ -291,12 +295,14 @@ function App() {
   }, [page, submissionMeta]);
 
   function navigate(next) {
-    if (next === page) return;
-    setTransitioning(true);
-    setTimeout(() => {
-      setPage(next);
-      setTimeout(() => setTransitioning(false), 50);
-    }, 280);
+    if (next === page || transitionLock.current) return;
+    transitionLock.current = true;
+    setOutgoingPage(page);
+    setPage(next);
+    window.setTimeout(() => {
+      setOutgoingPage(null);
+      transitionLock.current = false;
+    }, PAGE_TRANSITION_MS);
   }
 
   function handleLandingStart() { navigate(1); }
@@ -362,9 +368,10 @@ function App() {
   }
 
   const tweaks = t;
+  const transitioning = outgoingPage !== null;
 
-  const screen = (() => {
-    switch (page) {
+  function renderScreen(pageNum) {
+    switch (pageNum) {
       case 0: return <LandingScreen tweaks={tweaks} onStart={handleLandingStart}/>;
       case 1: return <EntryScreen session={session} tweaks={tweaks} onEnter={handleEnter}/>;
       case 2: return <IntroScreen session={session} tweaks={tweaks} onStart={handleStart}/>;
@@ -373,20 +380,20 @@ function App() {
       case 5: return <CompleteScreen session={session} tweaks={tweaks} responses={responses} favorites={favorites} onRetake={handleRetake} saveStatus={saveStatus} saveMessage={saveMessage} saveMode={SUBMIT_MODE} onRetrySave={handleRetrySave}/>;
       default: return <LandingScreen tweaks={tweaks} onStart={handleLandingStart}/>;
     }
-  })();
+  }
 
   return (
     <div className="viewport">
+      {outgoingPage !== null && (
+        <div key={`leave-${outgoingPage}`} className="screen-stage screen-stage--leave" aria-hidden="true">
+          {renderScreen(outgoingPage)}
+        </div>
+      )}
       <div
-        key={page}
-        style={{
-          position: "absolute", inset: 0,
-          animation: transitioning
-            ? "slide-out-left .3s cubic-bezier(.45,.05,.3,1) forwards"
-            : "slide-in-right .4s cubic-bezier(.2,.7,.2,1)",
-        }}
+        key={`active-${page}`}
+        className={"screen-stage" + (transitioning ? " screen-stage--arrive" : "")}
       >
-        {screen}
+        {renderScreen(page)}
       </div>
 
       <TweaksPanel>

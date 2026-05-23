@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import { saveSurveyResponse } from "./supabase.js";
 import { isSheetsEnabled, syncPendingToSheets } from "./sheets.js";
+import { trySyncAfterSave } from "./sync-after-save.js";
 import { validateSubmission } from "./validate.js";
 
 const PORT = Number(process.env.PORT || 8787);
@@ -59,11 +60,13 @@ app.post("/api/survey-responses", requireApiKey, async (req, res) => {
 
   try {
     const result = await saveSurveyResponse(validation.row);
+    const sheetSync = await trySyncAfterSave(result);
     res.status(200).json({
       ok: true,
       response_id: result.response_id,
       duplicate: result.duplicate,
-      sheet_sync: isSheetsEnabled() ? "queued" : "skipped",
+      updated: result.updated,
+      sheet_sync: sheetSync,
     });
   } catch (err) {
     console.error("[survey-save]", err);

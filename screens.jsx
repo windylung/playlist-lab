@@ -119,11 +119,10 @@ function EntryScreen({ session, tweaks = {}, onEnter }) {
       <div className="grain entry-grain" aria-hidden="true" />
 
       <div className="screen-pad entry-header">
-        <h1 className="entry-title rise">프로필을 선택해주세요</h1>
-        <p className="entry-subtitle rise delay-1">
-          {window.SONGS.length}곡을 듣고 반응을 골라 주세요.
-          <br />
-          모은 데이터는 인공지능 기초 수업에서 실습 자료로 쓰입니다.
+        <h1 className="screen-title rise">프로필을 선택해주세요</h1>
+        <p className="screen-subtitle rise delay-1">
+          이름이나 학번을 입력하면<br />
+          자동으로 검색됩니다
         </p>
 
         {/* Search */}
@@ -144,11 +143,7 @@ function EntryScreen({ session, tweaks = {}, onEnter }) {
 
       {/* Student list — only visible while searching */}
       <div className="screen-pad-x entry-list">
-        {!hasQuery ? (
-          <div className="text-center rise delay-3 entry-empty">
-            이름이나 학번을 입력하면<br />자동으로 검색됩니다
-          </div>
-        ) : (
+        {!hasQuery ? null : (
           <div className="rise entry-scroll-wrap">
             <div className="scroll entry-scroll">
               {filtered.length === 0 ? (
@@ -216,14 +211,14 @@ function IntroScreen({ session, tweaks = {}, onStart }) {
       <div className="grain intro-grain" aria-hidden="true" />
 
       <div className="screen-pad intro-header">
-        <h1 className="intro-title rise">
+        <h1 className="screen-title rise">
           총 {window.SONGS.length}곡을 듣고<br />
           반응을 선택해주세요
         </h1>
-        <p className="intro-subtitle rise delay-1">
+        <p className="screen-subtitle rise delay-1">
           한 번 선택하면 돌아갈 수 없어요.
           <br />
-          소요 시간은 약 2분
+          소요 시간은 약 2분 입니다
         </p>
       </div>
 
@@ -504,12 +499,12 @@ function localSearch(q) {
 const SUGGESTION_CHIPS = [
 { label: "IU", q: "IU" },
 { label: "NewJeans", q: "NewJeans" },
-{ label: "임영웅", q: "임영웅" },
+{ label: "BTS", q: "BTS" },
 { label: "아이브", q: "IVE" },
 { label: "헤이즈", q: "헤이즈" },
-{ label: "정국", q: "Jung Kook" },
+{ label: "염따", q: "염따" },
 { label: "AKMU", q: "AKMU" },
-{ label: "이무진", q: "이무진" }];
+{ label: "지코", q: "지코" }];
 
 
 function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
@@ -579,12 +574,12 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
 
       <div className="screen-pad" style={{ paddingTop: 30, paddingBottom: 12, position: "relative", zIndex: 2 }}>
         <div className="rise" style={{ marginBottom: 18 }}>
-          <h1 className="display" style={{ fontSize: 38, margin: 0, color: "oklch(1 0 0 / 0.98)" }}>
+          <h1 className="screen-title on-dark">
             자주 듣는 노래를<br />알려 주세요
           </h1>
-          <div style={{ fontSize: 13, marginTop: 12, lineHeight: 1.55, color: "oklch(1 0 0 / 0.72)" }}>
-            1~2곡을 선택해 주세요. 검색하거나 추천 아티스트를 눌러 보세요.
-          </div>
+          <p className="screen-subtitle on-dark" style={{ marginTop: 12, marginBottom: 0 }}>
+            제목과 아티스트를 검색해 1~2곡을 선택해주세요
+          </p>
         </div>
 
         {/* selected songs */}
@@ -665,19 +660,6 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
                 </button>
             )}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", padding: "0 10px 8px", color: "oklch(1 0 0 / 0.6)" }}>
-              차트에서 고르기
-            </div>
-            {FAKE_ITUNES.slice(0, 5).map((s, i) =>
-          <div key={i} className="row glass" onClick={() => addSong(s, "itunes")}>
-                <MiniArt song={{ hue: s.hue }} artwork={s.artwork} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</div>
-                  <div style={{ fontSize: 12, color: "oklch(1 0 0 / 0.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</div>
-                </div>
-                <Ic.Plus s={18} />
-              </div>
-          )}
           </div> :
         loading ?
         <div className="flex col gap-3" style={{ padding: "8px 0" }}>
@@ -698,20 +680,12 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
         <div className="text-center" style={{ padding: "30px 20px", fontSize: 14 }}>
             <div style={{ color: "oklch(1 0 0 / 0.85)", marginBottom: 4 }}>"{query}"에 대한 결과가 없어요</div>
             <div style={{ fontSize: 12, marginBottom: 16, color: "oklch(1 0 0 / 0.55)" }}>다른 키워드로 검색하거나 직접 입력해 주세요</div>
-            <button onClick={() => setManualOpen(true)} className="btn glass" style={{ height: 40, fontSize: 13, padding: "0 18px" }}>
-              직접 입력하기 <Ic.Arrow />
+            <button type="button" onClick={() => setManualOpen(true)} className="favorites-manual-link">
+              직접 입력하기
             </button>
           </div> :
 
         <div>
-            <div className="flex between" style={{ alignItems: "center", padding: "0 10px 8px" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "oklch(1 0 0 / 0.6)" }}>
-                {source === "itunes" ? "iTunes 검색 결과" : "추천 결과"}
-              </span>
-              <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.04em", color: "oklch(1 0 0 / 0.5)" }}>
-                {results.length}건
-              </span>
-            </div>
             {results.map((s, i) =>
           <div key={i} className="row glass" onClick={() => addSong(s, source)}>
                 <MiniArt song={{ hue: s.hue }} artwork={s.artwork} />
@@ -724,7 +698,7 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
           )}
             {source === "local" &&
           <div className="text-center" style={{ padding: "12px 20px 4px" }}>
-                <button onClick={() => setManualOpen(true)} style={{ fontSize: 12, textDecoration: "underline", color: "oklch(1 0 0 / 0.6)" }}>
+                <button type="button" onClick={() => setManualOpen(true)} className="favorites-manual-link">
                   원하는 곡이 없나요? 직접 입력
                 </button>
               </div>
@@ -736,11 +710,7 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
       {/* manual + submit */}
       <div className="screen-pad" style={{ paddingTop: 8, paddingBottom: 24, position: "relative", zIndex: 2 }}>
         {selected.length < 2 &&
-        <button onClick={() => setManualOpen(true)} style={{
-          display: "block", margin: "0 auto 12px",
-          fontSize: 13, color: "oklch(1 0 0 / 0.55)",
-          textDecoration: "underline"
-        }}>
+        <button type="button" onClick={() => setManualOpen(true)} className="favorites-manual-link favorites-manual-link--footer">
             검색이 안 되나요? 직접 입력
           </button>
         }
@@ -771,48 +741,38 @@ function ManualModal({ onClose, onSave }) {
   const [artist, setArtist] = React.useState("");
   const valid = title.trim().length > 0 && artist.trim().length > 0;
   return (
-    <Modal onClose={onClose}>
-      <div className="display" style={{ fontSize: 24, marginBottom: 16 }}>직접 입력</div>
-      <div className="flex col gap-3" style={{ marginBottom: 18 }}>
+    <Modal onClose={onClose} variant="glass">
+      <h2 className="modal-glass-title">직접 입력</h2>
+      <div className="flex col gap-3 modal-glass-fields">
         <div>
-          <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--ink-mute)" }}>곡 제목</label>
+          <label className="modal-glass-label" htmlFor="manual-song-title">곡 제목</label>
           <input
-            value={title} onChange={(e) => setTitle(e.target.value)}
+            id="manual-song-title"
+            className="modal-glass-input"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="예: 밤편지"
             maxLength={50}
-            style={{
-              display: "block", width: "100%", height: 44, marginTop: 6,
-              padding: "0 14px", borderRadius: 12,
-              border: "0", outline: "0",
-              background: "var(--paper-2)",
-              boxShadow: "inset 0 0 0 1px var(--line)",
-              fontSize: 15
-            }} />
-          
+          />
         </div>
         <div>
-          <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--ink-mute)" }}>아티스트</label>
+          <label className="modal-glass-label" htmlFor="manual-song-artist">아티스트</label>
           <input
-            value={artist} onChange={(e) => setArtist(e.target.value)}
+            id="manual-song-artist"
+            className="modal-glass-input"
+            value={artist}
+            onChange={(e) => setArtist(e.target.value)}
             placeholder="예: IU"
             maxLength={50}
-            style={{
-              display: "block", width: "100%", height: 44, marginTop: 6,
-              padding: "0 14px", borderRadius: 12,
-              border: "0", outline: "0",
-              background: "var(--paper-2)",
-              boxShadow: "inset 0 0 0 1px var(--line)",
-              fontSize: 15
-            }} />
-          
+          />
         </div>
       </div>
-      <div className="flex gap-3">
-        <button className="btn ghost flex-1" onClick={onClose}>취소</button>
-        <button className="btn flex-1" disabled={!valid} onClick={() => onSave({ title: title.trim(), artist: artist.trim(), hue: 240 })}>추가</button>
+      <div className="flex gap-3 modal-glass-actions">
+        <button type="button" className="btn glass-light flex-1 modal-glass-btn-ghost" onClick={onClose}>취소</button>
+        <button type="button" className="btn glass-light flex-1" disabled={!valid} onClick={() => onSave({ title: title.trim(), artist: artist.trim(), hue: 240 })}>추가</button>
       </div>
-    </Modal>);
-
+    </Modal>
+  );
 }
 
 // === SCREEN 5: COMPLETE ========================================
@@ -836,113 +796,77 @@ function CompleteScreen({ session, tweaks = {}, responses, favorites, onRetake, 
   const [confirmRetake, setConfirmRetake] = React.useState(false);
 
   return (
-    <div className="screen" style={{ background: "var(--electric)", color: "var(--paper)" }}>
-      <BlobStage tint="electric" intensity={1.2} />
-      <div className="grain" />
+    <div className="screen complete">
+      <div className="intro-bg" aria-hidden="true" />
+      <div className="grain intro-grain" aria-hidden="true" />
 
-      <div className="scroll" style={{ flex: 1, position: "relative", zIndex: 2 }}>
-        <div className="screen-pad" style={{ paddingTop: 30, paddingBottom: 20 }}>
-          <div className="rise" style={{ marginBottom: 24 }}>
-            <h1 className="display" style={{ fontSize: 52, margin: 0 }}>
-              <span className="serif-ko" style={{ fontSize: 64, fontWeight: 400, lineHeight: 0.9 }}>수고하셨어요,</span><br />
+      <div className="scroll" style={{ flex: 1, position: "relative", zIndex: 3 }}>
+        <div className="screen-pad complete-stack" style={{ paddingTop: 30, paddingBottom: 20 }}>
+          <div className="rise">
+            <h1 className="screen-title">
+              수고하셨어요,<br />
               {session?.name}님
             </h1>
-            <div style={{ fontSize: 15, opacity: 0.85, marginTop: 14, lineHeight: 1.55, letterSpacing: "-0.005em" }}>
-              응답 저장 상태를 확인해 주세요.<br />
-              다음 수업에서 우리 반의 음악 군집 지도를 함께 그려볼게요.
-            </div>
-            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <SaveIndicator status={saveStatus} />
-              <span style={{ fontSize: 11, opacity: 0.6, letterSpacing: "0.06em" }}>
-                MODE: {saveMode.toUpperCase()}
-              </span>
-            </div>
-            {saveMessage &&
-            <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.5, color: "oklch(1 0 0 / 0.72)" }}>
-                {saveMessage}
-              </div>
+          </div>
+
+          <div className="rise delay-1 complete-save-card glass-light">
+            {saveStatus === "saved" &&
+            <p className="complete-save-card__status complete-save-card__status--saved">응답 저장 완료</p>
             }
             {saveStatus === "failed" &&
-            <div style={{ marginTop: 10 }}>
-                <button className="btn glass" style={{ height: 36, fontSize: 12, padding: "0 14px" }} onClick={onRetrySave}>
-                  지금 다시 저장 시도
-                </button>
-              </div>
+            <div className="complete-save-card__failed-row">
+              <p className="complete-save-card__status complete-save-card__status--failed">응답 저장 실패</p>
+              <button type="button" className="btn glass-light complete-save-card__retry" onClick={onRetrySave}>
+                새로고침
+              </button>
+            </div>
+            }
+            {(saveStatus === "saving" || saveStatus === "idle") &&
+            <p className="complete-save-card__status complete-save-card__status--saving">응답 저장 중…</p>
             }
           </div>
 
           {/* response summary card */}
-          <div className="rise delay-1" style={{
-            background: "oklch(1 0 0 / 0.08)",
-            backdropFilter: "blur(10px)",
-            borderRadius: 20,
-            padding: "18px 18px 16px",
-            marginBottom: 14,
-            boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.15)"
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", opacity: 0.7, marginBottom: 12 }}>
-              YOUR REACTIONS
+          <div className="rise delay-2 complete-glass-card glass-light">
+            <div className="complete-glass-card__reactions-bar flex">
+              {stats.like > 0 && <div className="complete-glass-card__bar-segment complete-glass-card__bar-segment--dark" style={{ flex: stats.like }} />}
+              {stats.skip > 0 && <div className="complete-glass-card__bar-segment complete-glass-card__bar-segment--mid" style={{ flex: stats.skip }} />}
+              {stats.dislike > 0 && <div className="complete-glass-card__bar-segment complete-glass-card__bar-segment--light" style={{ flex: stats.dislike }} />}
             </div>
-            <div className="flex" style={{ gap: 4, marginBottom: 14 }}>
-              {/* like/skip/dislike bar */}
-              {stats.like > 0 && <div style={{ flex: stats.like, height: 6, background: "var(--like)", borderRadius: 3 }} />}
-              {stats.skip > 0 && <div style={{ flex: stats.skip, height: 6, background: "oklch(1 0 0 / 0.4)", borderRadius: 3 }} />}
-              {stats.dislike > 0 && <div style={{ flex: stats.dislike, height: 6, background: "var(--dislike)", borderRadius: 3 }} />}
-            </div>
-            <div className="flex between" style={{ gap: 8 }}>
+            <div className="complete-glass-card__reactions-stats flex between">
               {[
-              { k: "like", label: tweaks.labelLike || "좋아요", count: stats.like || 0, color: "var(--like)" },
-              { k: "skip", label: tweaks.labelSkip || "그저 그래요", count: stats.skip || 0, color: "oklch(1 0 0 / 0.85)" },
-              { k: "dislike", label: tweaks.labelDislike || "별로에요", count: stats.dislike || 0, color: "var(--dislike)" }].
+              { k: "like", label: tweaks.labelLike || "좋아요", count: stats.like || 0 },
+              { k: "skip", label: tweaks.labelSkip || "그저 그래요", count: stats.skip || 0 },
+              { k: "dislike", label: tweaks.labelDislike || "별로에요", count: stats.dislike || 0 }].
               map((it) =>
               <div key={it.k} className="flex col gap-2" style={{ flex: 1 }}>
                   <div className="flex center gap-2" style={{ justifyContent: "flex-start" }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 2, background: it.color }} />
-                    <span style={{ fontSize: 11, opacity: 0.8, letterSpacing: "-0.005em" }}>{it.label}</span>
+                    <div className="complete-glass-card__reaction-dot" />
+                    <span className="complete-glass-card__reaction-label">{it.label}</span>
                   </div>
-                  <div className="display" style={{ fontSize: 36 }}>{it.count}</div>
+                  <div className="display complete-glass-card__reaction-count">{it.count}</div>
                 </div>
               )}
             </div>
           </div>
 
           {topGenre &&
-          <div className="rise delay-2" style={{
-            padding: "14px 18px",
-            background: "oklch(0.84 0.14 55)",
-            color: "var(--ink)",
-            borderRadius: 16,
-            marginBottom: 14,
-            display: "flex", alignItems: "center", gap: 12
-          }}>
-              <Ic.Sparkle s={18} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", opacity: 0.7 }}>TOP GENRE</div>
-                <div className="serif-ko" style={{ fontSize: 28, lineHeight: 1.1 }}>{topGenre}</div>
-              </div>
+          <div className="rise delay-3 complete-glass-card glass-light complete-glass-card--genre">
+              <Ic.Sparkle s={16} />
+              <div className="serif-ko complete-glass-card__genre">{topGenre}</div>
             </div>
           }
 
           {/* favorites card */}
           {favorites && favorites.length > 0 &&
-          <div className="rise delay-3" style={{
-            background: "oklch(1 0 0 / 0.08)",
-            backdropFilter: "blur(10px)",
-            borderRadius: 20,
-            padding: "16px 18px",
-            marginBottom: 14,
-            boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.15)"
-          }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", opacity: 0.7, marginBottom: 10 }}>
-                YOUR FAVORITES
-              </div>
-              <div className="flex col gap-3">
+          <div className="rise delay-4 complete-glass-card glass-light">
+              <div className="flex col complete-glass-card__favorites">
                 {favorites.map((s, i) =>
-              <div key={i} className="flex gap-3" style={{ alignItems: "center" }}>
+              <div key={i} className="flex gap-3 complete-glass-card__favorite-row">
                     <MiniArt song={{ hue: s.hue || 268 }} artwork={s.artwork} size={36} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: "-0.01em" }}>{s.title}</div>
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>{s.artist}</div>
+                      <div className="complete-glass-card__favorite-title">{s.title}</div>
+                      <div className="complete-glass-card__favorite-artist">{s.artist}</div>
                     </div>
                     <Ic.Note s={14} />
                   </div>
@@ -952,30 +876,16 @@ function CompleteScreen({ session, tweaks = {}, responses, favorites, onRetake, 
           }
 
           {/* next class card */}
-          <div className="rise delay-4" style={{
-            padding: "16px 18px",
-            background: "oklch(0.16 0.03 270)",
-            color: "var(--paper)",
-            borderRadius: 20,
-            marginBottom: 14
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", opacity: 0.6, marginBottom: 6 }}>
-              NEXT CLASS
-            </div>
-            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.5 }}>
-              다음 <span style={{ color: "oklch(0.84 0.14 55)", fontWeight: 700 }}>인공지능 기초</span> 수업 시간에는 <span className="serif" style={{ fontSize: 22, color: "oklch(0.84 0.14 55)" }}>K-Means 군집화</span>로 음악 추천 시스템을 만들어봅시다.
-            </div>
+          <div className="rise delay-5 complete-glass-card glass-light complete-glass-card--next">
+            <p className="complete-glass-card__next-text">
+              다음 수업 시간에는 <span className="complete-glass-card__next-highlight serif">K-Means 군집화</span>로 음악 추천 시스템을 만들어봅시다.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Retake button — bottom center, outside scroll */}
-      <div style={{ position: "relative", zIndex: 3, padding: "0 24px 22px", textAlign: "center" }}>
-        <button className="rise delay-5" onClick={() => setConfirmRetake(true)} style={{
-          fontSize: 12, opacity: 0.55,
-          textDecoration: "underline",
-          padding: "6px 12px",
-        }}>
+      <div className="complete-footer" style={{ position: "relative", zIndex: 3, padding: "0 24px 22px", textAlign: "center" }}>
+        <button type="button" className="rise delay-6 complete-retake-btn" onClick={() => setConfirmRetake(true)}>
           다시 응답하고 싶어요
         </button>
       </div>

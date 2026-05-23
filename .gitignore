@@ -1,10 +1,38 @@
-server/node_modules/
+# Dependencies
 node_modules/
-server/.env
+server/node_modules/
+
+# Secrets & local env
 .env
-.env.local
+.env.*
+!.env.*.example
+server/.env
 server/google-service-account.json
 survey-config.js
-*.log
+
+# Vercel export (generated, contains secrets)
+.env.vercel
+vercel-env.json
+vercel-env.env
+
+# Vercel / build
+.vercel/
+
+# OS & editor
 .DS_Store
-.vercel
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.code-workspace
+
+# Cursor / Claude local
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Optional large local assets (uncomment if needed)
+# video.mp4

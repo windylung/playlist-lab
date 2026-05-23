@@ -445,10 +445,11 @@ function ReactionBtn({ kind, onClick, pressed, labels }) {
 }
 
 // === MODAL ===
-function Modal({ children, onClose }) {
+function Modal({ children, onClose, variant }) {
+  const isGlass = variant === "glass";
   return (
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className={"modal-bg" + (isGlass ? " modal-bg-glass" : "")} onClick={onClose}>
+      <div className={"modal" + (isGlass ? " modal-glass" : "")} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>

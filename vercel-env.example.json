@@ -1,0 +1,14 @@
+{
+  "_comment": "npm run env:vercel 로 vercel-env.json 생성. Git에 커밋하지 마세요.",
+  "env": {
+    "SUPABASE_URL": "https://YOUR_PROJECT.supabase.co",
+    "SUPABASE_SERVICE_ROLE_KEY": "your_service_role_key",
+    "SURVEY_API_KEY": "your-long-random-api-key",
+    "SURVEY_SAVE_MODE": "stable",
+    "SURVEY_STABLE_ENDPOINT": "/api/survey-responses",
+    "GOOGLE_SHEETS_SPREADSHEET_ID": "your_spreadsheet_id",
+    "GOOGLE_SHEETS_TAB_NAME": "응답",
+    "GOOGLE_SERVICE_ACCOUNT_JSON_BASE64": "base64_single_line",
+    "CRON_SECRET": "your-cron-secret"
+  }
+}

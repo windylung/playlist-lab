@@ -1,6 +1,6 @@
 import { checkApiKey } from "./_lib/auth.js";
 import { saveSurveyResponse } from "../server/src/supabase.js";
-import { isSheetsEnabled } from "../server/src/sheets.js";
+import { trySyncAfterSave } from "../server/src/sync-after-save.js";
 import { validateSubmission } from "../server/src/validate.js";
 
 export default async function handler(req, res) {
@@ -20,11 +20,13 @@ export default async function handler(req, res) {
 
   try {
     const result = await saveSurveyResponse(validation.row);
+    const sheetSync = await trySyncAfterSave(result);
     return res.status(200).json({
       ok: true,
       response_id: result.response_id,
       duplicate: result.duplicate,
-      sheet_sync: isSheetsEnabled() ? "queued" : "skipped",
+      updated: result.updated,
+      sheet_sync: sheetSync,
     });
   } catch (err) {
     console.error("[survey-save]", err);
