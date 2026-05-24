@@ -312,14 +312,20 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
 
   if (!song) return null;
 
-  const isCompactHeight = viewportHeight < 760;
-  const topPadding = isCompactHeight ? 20 : 44;
-  const contentBottomPadding = isCompactHeight ? 8 : 12;
-  const titleMarginTop = isCompactHeight ? 16 : 26;
-  const ctaMarginTop = isCompactHeight ? 14 : 22;
-  const reactionsBottomPadding = isCompactHeight ? 14 : 26;
-  const albumArtMaxByHeight = Math.floor(viewportHeight * (isCompactHeight ? 0.31 : 0.35));
-  const albumArtSize = Math.max(170, Math.min(tweaks.albumArtSize || 240, albumArtMaxByHeight));
+  function clampNum(min, value, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+  const vh = viewportHeight || 800;
+  const topPadding = clampNum(16, vh * 0.045, 44);
+  const contentBottomPadding = clampNum(6, vh * 0.012, 14);
+  const titleMarginTop = clampNum(12, vh * 0.025, 26);
+  const ctaMarginTop = clampNum(10, vh * 0.022, 22);
+  const reactionsBottomPadding = clampNum(14, vh * 0.03, 26);
+  const albumArtSize = Math.round(
+    clampNum(170, vh * 0.30, tweaks.albumArtSize || 280)
+  );
+  const titleFontSize = clampNum(22, vh * 0.034, 30);
+  const artistFontSize = clampNum(13, vh * 0.018, 16);
 
   const exitAnim = exiting === "like" ? "swipe-right .42s cubic-bezier(.45,.05,.3,1) forwards" :
   exiting === "dislike" ? "swipe-left .42s cubic-bezier(.45,.05,.3,1) forwards" :
@@ -334,7 +340,7 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
       {/* Thin progress bar — only top affordance left */}
       <div style={{
         position: "absolute", left: 0, right: 0, top: 0, zIndex: 4,
-        padding: "10px 20px 0"
+        padding: "calc(env(safe-area-inset-top, 0px) + 10px) 20px 0"
       }}>
         <div style={{
           position: "relative",
@@ -354,7 +360,7 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
       </div>
 
       {/* Album art + meta */}
-      <div className="flex col center" style={{ flex: 1, padding: `${topPadding}px 24px ${contentBottomPadding}px`, position: "relative", zIndex: 2 }}>
+      <div className="flex col center" style={{ flex: 1, padding: `calc(env(safe-area-inset-top, 0px) + ${topPadding}px) 24px ${contentBottomPadding}px`, position: "relative", zIndex: 2 }}>
         <div
           key={song.id}
           style={{
@@ -368,10 +374,10 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
         </div>
 
         <div style={{ textAlign: "center", maxWidth: 320, marginTop: titleMarginTop }}>
-          <h2 className="display" style={{ fontSize: isCompactHeight ? 26 : 30, margin: 0, color: "oklch(1 0 0 / 0.98)" }}>
+          <h2 className="display" style={{ fontSize: titleFontSize, margin: 0, color: "oklch(1 0 0 / 0.98)" }}>
             {song.title}
           </h2>
-          <div style={{ fontSize: isCompactHeight ? 15 : 16, color: "oklch(1 0 0 / 0.72)", marginTop: 6, fontWeight: 400, letterSpacing: "-0.015em" }}>
+          <div style={{ fontSize: artistFontSize, color: "oklch(1 0 0 / 0.72)", marginTop: 6, fontWeight: 400, letterSpacing: "-0.015em" }}>
             {song.artist}
           </div>
         </div>
@@ -393,7 +399,7 @@ function ReactionScreen({ session, tweaks = {}, responses, onResponse, onComplet
       </div>
 
       {/* Reaction buttons */}
-      <div style={{ position: "relative", zIndex: 3, padding: `0 12px ${reactionsBottomPadding}px` }}>
+      <div style={{ position: "relative", zIndex: 3, padding: `0 12px calc(env(safe-area-inset-bottom, 0px) + ${reactionsBottomPadding}px)` }}>
         <div className="flex gap-2" style={{ alignItems: "stretch" }}>
           <ReactionBtn kind="dislike" onClick={() => react("dislike")} pressed={pressed === "dislike"} />
           <ReactionBtn kind="skip" onClick={() => react("skip")} pressed={pressed === "skip"} />
@@ -625,7 +631,7 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
       <BlobStage tint="electric" intensity={0.85} />
       <div className="grain" />
 
-      <div className="screen-pad" style={{ paddingTop: 30, paddingBottom: 12, position: "relative", zIndex: 2 }}>
+      <div className="screen-pad" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 30px)", paddingBottom: 12, position: "relative", zIndex: 2 }}>
         <div className="rise" style={{ marginBottom: 18 }}>
           <h1 className="screen-title on-dark">
             자주 듣는 노래를<br />알려 주세요
@@ -751,7 +757,7 @@ function FavoritesScreen({ session, tweaks = {}, favorites, onSubmit }) {
       </div>
 
       {/* manual + submit */}
-      <div className="screen-pad" style={{ paddingTop: 8, paddingBottom: 24, position: "relative", zIndex: 2 }}>
+      <div className="screen-pad" style={{ paddingTop: 8, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)", position: "relative", zIndex: 2 }}>
         {selected.length < 2 &&
         <button type="button" onClick={() => setManualOpen(true)} className="favorites-manual-link favorites-manual-link--footer">
             검색이 안 되나요? 직접 입력
@@ -844,7 +850,7 @@ function CompleteScreen({ session, tweaks = {}, responses, favorites, onRetake, 
       <div className="grain intro-grain" aria-hidden="true" />
 
       <div className="scroll" style={{ flex: 1, position: "relative", zIndex: 3 }}>
-        <div className="screen-pad complete-stack" style={{ paddingTop: 30, paddingBottom: 20 }}>
+        <div className="screen-pad complete-stack" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 30px)", paddingBottom: 20 }}>
           <div className="rise">
             <h1 className="screen-title">
               수고하셨어요,<br />
@@ -927,7 +933,7 @@ function CompleteScreen({ session, tweaks = {}, responses, favorites, onRetake, 
         </div>
       </div>
 
-      <div className="complete-footer" style={{ position: "relative", zIndex: 3, padding: "0 24px 22px", textAlign: "center" }}>
+      <div className="complete-footer" style={{ position: "relative", zIndex: 3, padding: "0 24px calc(env(safe-area-inset-bottom, 0px) + 22px)", textAlign: "center" }}>
         <button type="button" className="rise delay-6 complete-retake-btn" onClick={() => setConfirmRetake(true)}>
           다시 응답하고 싶어요
         </button>

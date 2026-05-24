@@ -167,6 +167,40 @@ html, body, #root { height: 100%; width: 100%; }
   .modal-glass-input {
     font-size: 16px !important;
   }
+
+  /* 세로 높이 기준 반응형 사이즈 */
+  :root {
+    --screen-title-size: clamp(22px, 3.6dvh, 32px);
+    --screen-subtitle-size: clamp(14px, 2dvh, 17px);
+  }
+  .landing-title {
+    font-size: clamp(44px, 7.4dvh, 64px) !important;
+    margin-bottom: clamp(14px, 3dvh, 26px) !important;
+  }
+  .hero-note { bottom: clamp(140px, 24dvh, 220px) !important; }
+  .hero-note-svg { width: clamp(180px, 32dvh, 288px) !important; }
+  .entry-bg::before,
+  .intro-bg::before {
+    width: clamp(220px, 38dvh, 320px) !important;
+    height: clamp(220px, 38dvh, 320px) !important;
+  }
+  .entry-bg::after,
+  .intro-bg::after {
+    width: clamp(260px, 44dvh, 360px) !important;
+    height: clamp(260px, 44dvh, 360px) !important;
+  }
+
+  /* 컨텐츠 패딩도 세로 비례 */
+  .screen-pad { padding: clamp(16px, 3dvh, 28px) clamp(18px, 5vw, 24px); }
+  .screen-pad-x { padding-left: clamp(18px, 5vw, 24px); padding-right: clamp(18px, 5vw, 24px); }
+  .entry-header,
+  .intro-header { padding-top: clamp(20px, 4dvh, 40px); }
+  .entry-footer,
+  .intro-footer { padding-bottom: clamp(14px, 3dvh, 26px); }
+
+  /* 버튼 높이도 세로 기준 */
+  .btn { height: clamp(46px, 7dvh, 56px); }
+  .landing-cta { height: clamp(46px, 7dvh, 56px); }
   #root {
     display: block;
     position: fixed;
@@ -186,15 +220,30 @@ html, body, #root { height: 100%; width: 100%; }
     min-height: 100svh;
     max-height: none;
     margin: 0;
+    padding: 0;
     border-radius: 0;
     background: transparent;
     overflow: hidden;
     box-sizing: border-box;
-    padding:
-      env(safe-area-inset-top, 0px)
-      env(safe-area-inset-right, 0px)
-      env(safe-area-inset-bottom, 0px)
-      env(safe-area-inset-left, 0px);
+  }
+
+  /* 콘텐츠 영역만 safe-area 안쪽으로 (배경은 풀-블리드) */
+  .entry-header,
+  .intro-header {
+    padding-top: max(36px, calc(env(safe-area-inset-top, 0px) + 18px));
+  }
+  .entry-footer,
+  .intro-footer {
+    padding-bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  }
+  .landing-content {
+    padding-bottom: max(44px, calc(env(safe-area-inset-bottom, 0px) + 22px));
+  }
+  .complete .scroll > .screen-pad {
+    padding-top: max(30px, calc(env(safe-area-inset-top, 0px) + 14px));
+  }
+  .complete-footer {
+    padding-bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 12px));
   }
   .screen-stage {
     inset: 0;
@@ -211,18 +260,6 @@ html, body, #root { height: 100%; width: 100%; }
   }
 }
 
-/* 세로가 작은 기기 대응: 간격/타이포/버튼 크기 자동 축소 */
-@media (max-width: 759px) and (max-height: 780px) {
-  .screen-pad { padding: 20px 18px; }
-  .screen-pad-x { padding-left: 18px; padding-right: 18px; }
-  .entry-header,
-  .intro-header { padding-top: 24px; }
-  .entry-footer,
-  .intro-footer { padding-bottom: 16px; }
-  .screen-title { font-size: clamp(22px, 5.8vw, 28px); }
-  .screen-subtitle { font-size: 15px; line-height: 1.45; margin-bottom: 16px; }
-  .btn { height: 50px; }
-}
 
 @media (min-width: 760px) {
   .viewport {

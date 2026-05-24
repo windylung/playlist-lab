@@ -48,9 +48,35 @@ function getSheetConfig() {
   return sheetConfig;
 }
 
+// 곡 ID → 시트 컬럼 헤더 매핑 (순서 = 시트 컬럼 순서)
+const SONG_COLUMNS = [
+  { id: "M001", header: "KPOP_1" },
+  { id: "M002", header: "KPOP_2" },
+  { id: "M003", header: "INDIE_1" },
+  { id: "M004", header: "INDIE_2" },
+  { id: "M005", header: "HIPHOP_1" },
+  { id: "M006", header: "HIPHOP_2" },
+  { id: "M007", header: "POP_1" },
+  { id: "M008", header: "POP_2" },
+  { id: "M009", header: "BALLAD_1" },
+  { id: "M010", header: "BALLAD_2" },
+];
+
+// 마지막 컬럼 알파벳 계산 (고정 7 + 곡 10 + 고정 6 = 23열 → W)
+// A(0)~G(6): 고정 앞, H(7)~Q(16): 곡, R(17)~W(22): 고정 뒤
+const LAST_COL = String.fromCharCode(
+  "A".charCodeAt(0) + 6 + SONG_COLUMNS.length + 6
+);
+
 function flattenRow(record) {
   const reactions = Array.isArray(record.reactions) ? record.reactions : [];
   const favorites = Array.isArray(record.favorites) ? record.favorites : [];
+
+  // 곡 ID → action 맵
+  const reactionMap = {};
+  for (const r of reactions) {
+    reactionMap[r.song_id] = r.action;
+  }
 
   const reactionSummary = reactions
     .map((r) => `${r.song_id}:${r.action}`)
@@ -68,9 +94,9 @@ function flattenRow(record) {
     record.student_class ?? "",
     record.student_group ?? "",
     record.started_at ?? "",
+    ...SONG_COLUMNS.map((s) => reactionMap[s.id] ?? ""),
     reactions.length,
     reactionSummary,
-    favorites.length,
     favoriteSummary,
     record.app_version,
     record.mode,
@@ -86,9 +112,9 @@ const HEADER = [
   "class",
   "group",
   "started_at",
+  ...SONG_COLUMNS.map((s) => s.header),
   "reaction_count",
   "reactions",
-  "favorite_count",
   "favorites",
   "app_version",
   "mode",
@@ -97,13 +123,13 @@ const HEADER = [
 
 async function ensureHeader(sheets) {
   const { tabName, spreadsheetId } = getSheetConfig();
-  const range = `${tabName}!A1:N1`;
+  const range = `${tabName}!A1:${LAST_COL}1`;
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range,
   });
   const first = res.data.values?.[0];
-  if (first && first.length >= 5) return;
+  if (first && first.length >= HEADER.length) return;
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
@@ -139,7 +165,7 @@ export async function upsertSurveyToSheet(record) {
   const existingRow = await findSheetRowByStudentId(sheets, record.student_id);
 
   if (existingRow) {
-    const range = `${tabName}!A${existingRow}:N${existingRow}`;
+    const range = `${tabName}!A${existingRow}:${LAST_COL}${existingRow}`;
     await sheets.spreadsheets.values.update({
       spreadsheetId,
       range,
@@ -149,7 +175,7 @@ export async function upsertSurveyToSheet(record) {
     return { action: "updated", row: existingRow };
   }
 
-  const range = `${tabName}!A:N`;
+  const range = `${tabName}!A:${LAST_COL}`;
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range,

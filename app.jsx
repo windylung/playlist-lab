@@ -428,8 +428,26 @@ function App() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App/>);
+// students·songs 데이터를 Supabase API에서 받아온 뒤 렌더링
+(async function initApp() {
+  try {
+    const [studentsRes, songsRes] = await Promise.all([
+      fetch("/api/students"),
+      fetch("/api/songs"),
+    ]);
+    const { students } = await studentsRes.json();
+    const { songs } = await songsRes.json();
+    window.STUDENTS = students;
+    window.SONGS = songs;
+  } catch (err) {
+    console.error("[init] 데이터 로딩 실패", err);
+    document.getElementById("root").innerHTML =
+      '<p style="color:#e11d48;padding:2rem;font-family:sans-serif">데이터를 불러오지 못했습니다. 새로고침 해주세요.</p>';
+    return;
+  }
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<App/>);
+})();
 
 // 모든 화면에서 재사용하는 브라우저 UI 색상 동기화 함수
 window.__setMobileChromeColor = function setMobileChromeColor(backgroundColor, themeColor) {

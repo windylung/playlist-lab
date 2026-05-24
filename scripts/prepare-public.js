@@ -12,7 +12,6 @@ const publicDir = path.join(root, "public");
 const STATIC_FILES = [
   "Music Survey.html",
   "styles.css",
-  "data.js",
   "shared.jsx",
   "screens.jsx",
   "tweaks-panel.jsx",
