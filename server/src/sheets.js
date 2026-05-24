@@ -60,6 +60,18 @@ async function ensureTab(sheets, spreadsheetId, tabName) {
   });
 }
 
+function toKST(isoString) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d)) return isoString;
+  return d.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  });
+}
+
 // 곡 ID → 시트 컬럼 헤더 매핑 (순서 = 시트 컬럼 순서)
 const SONG_COLUMNS = [
   { id: "M001", header: "KPOP_1" },
@@ -100,19 +112,19 @@ function flattenRow(record) {
 
   return [
     record.response_id,
-    record.submitted_at,
+    toKST(record.submitted_at),
     record.student_id,
     record.student_name,
     record.student_class ?? "",
     record.student_group ?? "",
-    record.started_at ?? "",
+    toKST(record.started_at),
     ...SONG_COLUMNS.map((s) => reactionMap[s.id] ?? ""),
     reactions.length,
     reactionSummary,
     favoriteSummary,
     record.app_version,
     record.mode,
-    record.created_at,
+    toKST(record.created_at),
   ];
 }
 
