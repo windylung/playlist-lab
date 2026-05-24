@@ -48,6 +48,18 @@ function getSheetConfig() {
   return sheetConfig;
 }
 
+async function ensureTab(sheets, spreadsheetId, tabName) {
+  const res = await sheets.spreadsheets.get({ spreadsheetId });
+  const exists = res.data.sheets.some((s) => s.properties.title === tabName);
+  if (exists) return;
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{ addSheet: { properties: { title: tabName } } }],
+    },
+  });
+}
+
 // 곡 ID → 시트 컬럼 헤더 매핑 (순서 = 시트 컬럼 순서)
 const SONG_COLUMNS = [
   { id: "M001", header: "KPOP_1" },
@@ -220,4 +232,33 @@ export async function syncPendingToSheets() {
   }
 
   return { synced, failed, total: pending.length };
+}
+
+/**
+ * 곡 컬럼 매핑 시트 동기화
+ * songs: [{ id, title, artist, genre }]  — Supabase songs 테이블에서 조회한 데이터
+ */
+export async function syncSongMappingSheet(songs) {
+  if (!isSheetsEnabled()) return { skipped: true, reason: "sheets_not_configured" };
+
+  const sheets = getSheetsClient();
+  const { spreadsheetId } = getSheetConfig();
+  const tabName = process.env.GOOGLE_SHEETS_MAPPING_TAB_NAME || "곡_컬럼";
+
+  await ensureTab(sheets, spreadsheetId, tabName);
+
+  const header = ["시트 컬럼", "곡 ID", "제목", "아티스트", "장르"];
+  const rows = SONG_COLUMNS.map((sc) => {
+    const song = songs.find((s) => s.id === sc.id);
+    return [sc.header, sc.id, song?.title ?? "", song?.artist ?? "", song?.genre ?? ""];
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${tabName}!A1:E${rows.length + 1}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [header, ...rows] },
+  });
+
+  return { ok: true, tab: tabName, rows: rows.length };
 }
